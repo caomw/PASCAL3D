@@ -1,0 +1,44 @@
+function prepare_chair_imgs()
+
+image_dir = '/orions3-zfs/projects/rqi/Dataset/VOC12/VOCdevkit/VOC2012/JPEGImages/';
+load('easy_chairs');
+
+vnum = 360;
+azimuth_interval = [0 (360/(vnum*2)):(360/vnum):360-(360/(vnum*2))];
+labelfile = fopen(['easy_chair_labels_v' num2str(vnum) '.txt'],'w');
+
+for i = 1:length(easy_chairs)
+im = imread([image_dir easy_chairs{i}.img '.jpg']);
+box = easy_chairs{i}.object.bbox;
+w = box(3)-box(1)+1;
+h = box(4)-box(2)+1;
+im = imcrop(im, [box(1),box(2), w, h]);
+% write cropped img
+cropped_img = [num2str(i) '_' easy_chairs{i}.img '.jpg'];
+imwrite(im, ['easy_chair_set/' cropped_img]); % gt
+
+% write view annotation
+azimuth = easy_chairs{i}.object.viewpoint.azimuth;
+view = find_interval(azimuth, azimuth_interval);
+fprintf(labelfile, '%s %d\n', cropped_img, view-1);
+
+% fprintf('azimuth: %f,view: %d\n',azimuth,view-1);
+% imshow(im);
+% pause;
+
+end
+
+fclose(labelfile);
+
+function ind = find_interval(azimuth, a)
+
+for i = 1:numel(a)
+    if azimuth < a(i)
+        break;
+    end
+end
+ind = i - 1;
+if azimuth > a(end)
+    ind = 1;
+end
+% ---- END ----
